@@ -141,7 +141,7 @@ def generate_summary_report(data):
 
 # Function to display welcome message and image
 def display_welcome():
-    st.image(r"prompthero-prompt-ff9bdc63ada.png", use_column_width=True)
+    st.image(r"C:\Users\LENOVO\OneDrive - Texas State University\Desktop\dashboard\prompthero-prompt-ff9bdc63ada.png", use_column_width=True)
     st.write("### Welcome to CSV Analyzer!")
     st.write("Upload your CSV file to get started and explore various data analysis features.")
 
