@@ -3,6 +3,39 @@ import pandas as pd
 import plotly.express as px
 import plotly.figure_factory as ff
 
+# Custom CSS for buttons and sidebar
+st.markdown("""
+    <style>
+    .sidebar .sidebar-content {
+        padding-top: 20px;
+        background-color: #000000; /* Black background */
+    }
+    .sidebar .sidebar-content h1, h2, h3, h4, h5, h6 {
+        color: white; /* White text for headings */
+    }
+    .btn {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        text-align: center;
+        border-radius: 5px;
+        color: white;
+        background-color: #000000;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .btn:hover {
+        background-color: #0056b3;
+    }
+    .btn.active {
+        background-color: #004085;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Function to load data
 def load_data(file_path):
     try:
@@ -68,6 +101,7 @@ def display_distribution_plots(data):
         st.write(f"### Distribution of {column}")
         fig = px.histogram(data, x=column, nbins=30, marginal="box", title=f"Distribution of {column}", height=400, width=600)
         st.plotly_chart(fig)
+
 # Function to clean data
 def clean_data(data):
     st.write("## Data Cleaning")
@@ -105,37 +139,73 @@ def generate_summary_report(data):
         st.write("Correlation Matrix")
         st.write(numeric_data.corr())
 
+# Function to display welcome message and image
+def display_welcome():
+    st.image(r"prompthero-prompt-ff9bdc63ada.png", use_column_width=True)
+    st.write("### Welcome to CSV Analyzer!")
+    st.write("Upload your CSV file to get started and explore various data analysis features.")
+
 # Main function to display the app
 def main():
+    # Initialize session state
+    if "page" not in st.session_state:
+        st.session_state.page = "Home"
+
     st.sidebar.title("CSV File Analyzer")
     st.sidebar.write("Upload a CSV file to perform EDA")
     
     # Upload CSV file
     uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
 
+    # Navigation buttons in the sidebar
+    st.sidebar.title("Navigation")
+
+    with st.sidebar.expander("Data Overview"):
+        if st.sidebar.button("Home", key="Home"):
+            st.session_state.page = "Home"
+        if st.sidebar.button("Preview", key="Preview"):
+            st.session_state.page = "Preview"
+        if st.sidebar.button("Overview", key="Overview"):
+            st.session_state.page = "Overview"
+    
+    with st.sidebar.expander("Data Insights"):
+        if st.sidebar.button("Data Types", key="Data Types"):
+            st.session_state.page = "Data Types"
+        if st.sidebar.button("Missing Values", key="Missing Values"):
+            st.session_state.page = "Missing Values"
+        if st.sidebar.button("Correlation Matrix and Heatmap", key="Correlation Matrix and Heatmap"):
+            st.session_state.page = "Correlation Matrix and Heatmap"
+        if st.sidebar.button("Pairplot", key="Pairplot"):
+            st.session_state.page = "Pairplot"
+        if st.sidebar.button("Distribution Plots", key="Distribution Plots"):
+            st.session_state.page = "Distribution Plots"
+    
+    with st.sidebar.expander("Data Management"):
+        if st.sidebar.button("Data Cleaning", key="Data Cleaning"):
+            st.session_state.page = "Data Cleaning"
+        if st.sidebar.button("Custom Queries", key="Custom Queries"):
+            st.session_state.page = "Custom Queries"
+        if st.sidebar.button("Summary Report", key="Summary Report"):
+            st.session_state.page = "Summary Report"
+
     if uploaded_file is not None:
         data = load_data(uploaded_file)
-        
-        page = st.sidebar.selectbox(
-            "Choose a page",
-            ["Preview", "Overview", "Data Types", "Missing Values", "Correlation Matrix and Heatmap", "Pairplot", "Distribution Plots", "Data Cleaning", "Custom Queries", "Summary Report"]
-        )
-
-        if page == "Preview":
+        st.experimental_set_query_params(page="Home")
+        if st.session_state.page == "Preview":
             display_data_preview(data)
-        elif page == "Overview":
+        elif st.session_state.page == "Overview":
             display_basic_statistics(data)
-        elif page == "Data Types":
+        elif st.session_state.page == "Data Types":
             display_data_types(data)
-        elif page == "Missing Values":
+        elif st.session_state.page == "Missing Values":
             display_missing_values(data)
-        elif page == "Correlation Matrix and Heatmap":
+        elif st.session_state.page == "Correlation Matrix and Heatmap":
             display_correlation_matrix(data)
-        elif page == "Pairplot":
+        elif st.session_state.page == "Pairplot":
             display_pairplot(data)
-        elif page == "Distribution Plots":
+        elif st.session_state.page == "Distribution Plots":
             display_distribution_plots(data)
-        elif page == "Data Cleaning":
+        elif st.session_state.page == "Data Cleaning":
             cleaned_data = clean_data(data)
             st.write("## Cleaned Data Preview")
             st.dataframe(cleaned_data.head(20))
@@ -148,14 +218,14 @@ def main():
                 file_name='cleaned_data.csv',
                 mime='text/csv',
             )
-        elif page == "Custom Queries":
+        elif st.session_state.page == "Custom Queries":
             filter_data(data)
-        elif page == "Summary Report":
+        elif st.session_state.page == "Summary Report":
             generate_summary_report(data)
+        else:
+            display_welcome()
     else:
-        st.image(r"prompthero-prompt-ff9bdc63ada.png", use_column_width=True)
-        st.write("### Welcome to CSV Analyzer!")
-        st.write("Upload your CSV file to get started and explore various data analysis features.")
+        display_welcome()
 
 if __name__ == "__main__":
     main()
