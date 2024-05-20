@@ -2,10 +2,39 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.figure_factory as ff
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, r2_score
-import joblib
+
+# Custom CSS for buttons and sidebar
+st.markdown("""
+    <style>
+    .sidebar .sidebar-content {
+        padding-top: 20px;
+        background-color: #000000; /* Black background */
+    }
+    .sidebar .sidebar-content h1, h2, h3, h4, h5, h6 {
+        color: white; /* White text for headings */
+    }
+    .btn {
+        display: block;
+        width: 100%;
+        padding: 10px;
+        margin: 5px 0;
+        text-align: center;
+        border-radius: 5px;
+        color: white;
+        background-color: #000000;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .btn:hover {
+        background-color: #0056b3;
+    }
+    .btn.active {
+        background-color: #004085;
+        color: white;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # Function to load data
 def load_data(file_path):
@@ -110,76 +139,73 @@ def generate_summary_report(data):
         st.write("Correlation Matrix")
         st.write(numeric_data.corr())
 
-# Function to train a linear regression model
-def train_model(data):
-    st.write("## Machine Learning Model")
-    st.write("### Linear Regression")
-    
-    target = st.selectbox("Select Target Variable", data.columns)
-    features = st.multiselect("Select Feature Variables", data.columns)
-    
-    if st.button("Train Model"):
-        try:
-            X = data[features]
-            y = data[target]
-            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-            model = LinearRegression()
-            model.fit(X_train, y_train)
-            y_pred = model.predict(X_test)
-            
-            st.write(f"Mean Squared Error: {mean_squared_error(y_test, y_pred):.2f}")
-            st.write(f"R^2 Score: {r2_score(y_test, y_pred):.2f}")
-            
-            # Show line graph of predictions vs actual values
-            fig = px.line(x=y_test, y=y_pred, labels={'x': 'Actual Values', 'y': 'Predicted Values'}, title="Actual vs Predicted Values")
-            st.plotly_chart(fig)
-            
-            # Save model
-            model_filename = "linear_regression_model.joblib"
-            joblib.dump(model, model_filename)
-            
-            # Provide download link for the model
-            with open(model_filename, "rb") as file:
-                st.download_button(
-                    label="Download Model",
-                    data=file,
-                    file_name=model_filename,
-                    mime="application/octet-stream",
-                )
-        except Exception as e:
-            st.error(f"Error: {e}")
+# Function to display welcome message and image
+def display_welcome():
+    st.image(r"C:\Users\LENOVO\OneDrive - Texas State University\Desktop\dashboard\prompthero-prompt-ff9bdc63ada.png", use_column_width=True)
+    st.write("### Welcome to CSV Analyzer!")
+    st.write("Upload your CSV file to get started and explore various data analysis features.")
 
 # Main function to display the app
 def main():
+    # Initialize session state
+    if "page" not in st.session_state:
+        st.session_state.page = "Home"
+
     st.sidebar.title("CSV File Analyzer")
     st.sidebar.write("Upload a CSV file to perform EDA")
     
     # Upload CSV file
     uploaded_file = st.sidebar.file_uploader("Choose a CSV file", type="csv")
 
+    # Navigation buttons in the sidebar
+    st.sidebar.title("Navigation")
+
+    with st.sidebar.expander("Data Overview"):
+        if st.sidebar.button("Home", key="Home"):
+            st.session_state.page = "Home"
+        if st.sidebar.button("Preview", key="Preview"):
+            st.session_state.page = "Preview"
+        if st.sidebar.button("Overview", key="Overview"):
+            st.session_state.page = "Overview"
+    
+    with st.sidebar.expander("Data Insights"):
+        if st.sidebar.button("Data Types", key="Data Types"):
+            st.session_state.page = "Data Types"
+        if st.sidebar.button("Missing Values", key="Missing Values"):
+            st.session_state.page = "Missing Values"
+        if st.sidebar.button("Correlation Matrix and Heatmap", key="Correlation Matrix and Heatmap"):
+            st.session_state.page = "Correlation Matrix and Heatmap"
+        if st.sidebar.button("Pairplot", key="Pairplot"):
+            st.session_state.page = "Pairplot"
+        if st.sidebar.button("Distribution Plots", key="Distribution Plots"):
+            st.session_state.page = "Distribution Plots"
+    
+    with st.sidebar.expander("Data Management"):
+        if st.sidebar.button("Data Cleaning", key="Data Cleaning"):
+            st.session_state.page = "Data Cleaning"
+        if st.sidebar.button("Custom Queries", key="Custom Queries"):
+            st.session_state.page = "Custom Queries"
+        if st.sidebar.button("Summary Report", key="Summary Report"):
+            st.session_state.page = "Summary Report"
+
     if uploaded_file is not None:
         data = load_data(uploaded_file)
-        
-        page = st.sidebar.selectbox(
-            "Choose a page",
-            ["Preview", "Overview", "Data Types", "Missing Values", "Correlation Matrix and Heatmap", "Pairplot", "Distribution Plots", "Data Cleaning", "Custom Queries", "Summary Report", "Machine Learning"]
-        )
-
-        if page == "Preview":
+        st.experimental_set_query_params(page="Home")
+        if st.session_state.page == "Preview":
             display_data_preview(data)
-        elif page == "Overview":
+        elif st.session_state.page == "Overview":
             display_basic_statistics(data)
-        elif page == "Data Types":
+        elif st.session_state.page == "Data Types":
             display_data_types(data)
-        elif page == "Missing Values":
+        elif st.session_state.page == "Missing Values":
             display_missing_values(data)
-        elif page == "Correlation Matrix and Heatmap":
+        elif st.session_state.page == "Correlation Matrix and Heatmap":
             display_correlation_matrix(data)
-        elif page == "Pairplot":
+        elif st.session_state.page == "Pairplot":
             display_pairplot(data)
-        elif page == "Distribution Plots":
+        elif st.session_state.page == "Distribution Plots":
             display_distribution_plots(data)
-        elif page == "Data Cleaning":
+        elif st.session_state.page == "Data Cleaning":
             cleaned_data = clean_data(data)
             st.write("## Cleaned Data Preview")
             st.dataframe(cleaned_data.head(20))
@@ -192,14 +218,14 @@ def main():
                 file_name='cleaned_data.csv',
                 mime='text/csv',
             )
-        elif page == "Custom Queries":
+        elif st.session_state.page == "Custom Queries":
             filter_data(data)
-        elif page == "Summary Report":
+        elif st.session_state.page == "Summary Report":
             generate_summary_report(data)
-        elif page == "Machine Learning":
-            train_model(data)
+        else:
+            display_welcome()
     else:
-        st.sidebar.write("Please upload a CSV file.")
+        display_welcome()
 
 if __name__ == "__main__":
     main()
