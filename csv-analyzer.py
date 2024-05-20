@@ -62,7 +62,7 @@ def display_pairplot(data):
 
 # Function to display distribution plots
 def display_distribution_plots(data):
-    numeric_data = data.select_dtypes(include=['float64', 'int64'])
+    numeric_data = data.select_dtypes(include(['float64', 'int64']))
     st.write("## Distribution Plots")
     for column in numeric_data.columns:
         st.write(f"### Distribution of {column}")
@@ -154,7 +154,9 @@ def main():
         elif page == "Summary Report":
             generate_summary_report(data)
     else:
-        st.sidebar.write("Please upload a CSV file.")
+        st.image(r"C:\Users\LENOVO\OneDrive - Texas State University\Desktop\dashboard\prompthero-prompt-ff9bdc63ada.png", use_column_width=True)
+        st.write("### Welcome to CSV Analyzer!")
+        st.write("Upload your CSV file to get started and explore various data analysis features.")
 
 if __name__ == "__main__":
     main()
