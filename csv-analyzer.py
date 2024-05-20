@@ -62,13 +62,12 @@ def display_pairplot(data):
 
 # Function to display distribution plots
 def display_distribution_plots(data):
-    numeric_data = data.select_dtypes(include(['float64', 'int64']))
+    numeric_data = data.select_dtypes(include=['float64', 'int64'])
     st.write("## Distribution Plots")
     for column in numeric_data.columns:
         st.write(f"### Distribution of {column}")
         fig = px.histogram(data, x=column, nbins=30, marginal="box", title=f"Distribution of {column}", height=400, width=600)
         st.plotly_chart(fig)
-
 # Function to clean data
 def clean_data(data):
     st.write("## Data Cleaning")
