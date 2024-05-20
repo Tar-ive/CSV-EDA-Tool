@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.figure_factory as ff
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import joblib
 
 # Function to load data
 def load_data(file_path):
@@ -69,6 +73,82 @@ def display_distribution_plots(data):
         fig = px.histogram(data, x=column, nbins=30, marginal="box", title=f"Distribution of {column}", height=400, width=600)
         st.plotly_chart(fig)
 
+# Function to clean data
+def clean_data(data):
+    st.write("## Data Cleaning")
+    
+    if st.checkbox("Drop missing values"):
+        data = data.dropna()
+    
+    if st.checkbox("Drop duplicates"):
+        data = data.drop_duplicates()
+
+    return data
+
+# Function to filter data
+def filter_data(data):
+    st.write("## Custom Queries")
+    column = st.selectbox("Select Column", data.columns)
+    st.write(f"Data Type: {data[column].dtype}")
+    condition = st.text_input("Enter Condition (e.g., > 50)")
+    if st.button("Apply Filter"):
+        try:
+            filtered_data = data.query(f"{column} {condition}")
+            st.write(f"Filtered Data (Rows: {filtered_data.shape[0]})")
+            st.dataframe(filtered_data)
+        except Exception as e:
+            st.error(f"Error: {e}")
+
+# Function to generate summary report
+def generate_summary_report(data):
+    st.write("## Summary Report")
+    st.write(data.describe())
+    st.write("Missing Values")
+    st.write(data.isnull().sum())
+    numeric_data = data.select_dtypes(include=['float64', 'int64'])
+    if not numeric_data.empty:
+        st.write("Correlation Matrix")
+        st.write(numeric_data.corr())
+
+# Function to train a linear regression model
+def train_model(data):
+    st.write("## Machine Learning Model")
+    st.write("### Linear Regression")
+    
+    target = st.selectbox("Select Target Variable", data.columns)
+    features = st.multiselect("Select Feature Variables", data.columns)
+    
+    if st.button("Train Model"):
+        try:
+            X = data[features]
+            y = data[target]
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+            model = LinearRegression()
+            model.fit(X_train, y_train)
+            y_pred = model.predict(X_test)
+            
+            st.write(f"Mean Squared Error: {mean_squared_error(y_test, y_pred):.2f}")
+            st.write(f"R^2 Score: {r2_score(y_test, y_pred):.2f}")
+            
+            # Show line graph of predictions vs actual values
+            fig = px.line(x=y_test, y=y_pred, labels={'x': 'Actual Values', 'y': 'Predicted Values'}, title="Actual vs Predicted Values")
+            st.plotly_chart(fig)
+            
+            # Save model
+            model_filename = "linear_regression_model.joblib"
+            joblib.dump(model, model_filename)
+            
+            # Provide download link for the model
+            with open(model_filename, "rb") as file:
+                st.download_button(
+                    label="Download Model",
+                    data=file,
+                    file_name=model_filename,
+                    mime="application/octet-stream",
+                )
+        except Exception as e:
+            st.error(f"Error: {e}")
+
 # Main function to display the app
 def main():
     st.sidebar.title("CSV File Analyzer")
@@ -82,7 +162,7 @@ def main():
         
         page = st.sidebar.selectbox(
             "Choose a page",
-            ["Preview", "Overview", "Data Types", "Missing Values", "Correlation Matrix and Heatmap", "Pairplot", "Distribution Plots"]
+            ["Preview", "Overview", "Data Types", "Missing Values", "Correlation Matrix and Heatmap", "Pairplot", "Distribution Plots", "Data Cleaning", "Custom Queries", "Summary Report", "Machine Learning"]
         )
 
         if page == "Preview":
@@ -99,6 +179,25 @@ def main():
             display_pairplot(data)
         elif page == "Distribution Plots":
             display_distribution_plots(data)
+        elif page == "Data Cleaning":
+            cleaned_data = clean_data(data)
+            st.write("## Cleaned Data Preview")
+            st.dataframe(cleaned_data.head(20))
+
+            # Download cleaned data
+            csv = cleaned_data.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="Download cleaned data as CSV",
+                data=csv,
+                file_name='cleaned_data.csv',
+                mime='text/csv',
+            )
+        elif page == "Custom Queries":
+            filter_data(data)
+        elif page == "Summary Report":
+            generate_summary_report(data)
+        elif page == "Machine Learning":
+            train_model(data)
     else:
         st.sidebar.write("Please upload a CSV file.")
 
